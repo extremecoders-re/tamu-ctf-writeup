@@ -174,7 +174,7 @@ gigem{F0RM@1NG_1S_H4RD}
 
 #### Alternative approach instead of appending 38 A's
 
-Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x `for referring to it. In addition other field width sub-specifier have to be reduced by 4.
+Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x`for referring to it. In addition other field width sub-specifier have to be reduced by 4.
 
 ```
 \x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%08x%08x%105x%hhn%38x%hhn
