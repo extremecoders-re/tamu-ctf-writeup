@@ -1,4 +1,4 @@
-# Write-up
+# Pwn3 write-up
 
 # ![](/assets/problem-statement.png)
 
